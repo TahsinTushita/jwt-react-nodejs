@@ -13,12 +13,15 @@ const pool = mysql
   .promise();
 
 export async function getUsers() {
-  const [res] = await pool.query("SELECT * FROM user");
+  const [res] = await pool.query("SELECT id, name, orders, admin FROM user");
   return res;
 }
 
 export async function getUser(id) {
-  const [user] = await pool.query(`SELECT * FROM user WHERE id = ?`, [id]);
+  const [user] = await pool.query(
+    `SELECT id, name, orders, admin FROM user WHERE id = ?`,
+    [id],
+  );
   return user[0];
 }
 
@@ -31,11 +34,8 @@ export async function createUser(name, password, admin = 0) {
   return getUser(result[0].insertId);
 }
 
-export async function login(name, password) {
-  const [user] = await pool.query(
-    `SELECT * FROM user WHERE name = ? AND password = ?`,
-    [name, password],
-  );
+export async function login(name) {
+  const [user] = await pool.query(`SELECT * FROM user WHERE name = ?`, [name]);
 
   return user[0];
 }
