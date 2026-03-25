@@ -1,9 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { getUser, getUsers, createUser, login } from "./database.js";
 
 const app = express();
+const saltRounds = 11;
 
 app.use(express.json());
 
@@ -41,7 +43,8 @@ app.get("/api/users/:id", async (req, res) => {
 // Create a user
 app.post("/api/users", async (req, res) => {
   const { name, password } = req.body;
-  const user = await createUser(name, password);
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  const user = await createUser(name, hashedPassword);
   res.status(201).send(user);
 });
 
@@ -86,18 +89,25 @@ const generateRefreshToken = (user) => {
 // Login
 app.post("/api/login", async (req, res) => {
   const { name, password } = req.body;
-  const user = await login(name, password);
+  const user = await login(name);
   if (user) {
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    refreshTokens.push(refreshToken);
+    const storedHash = user.password;
+    const match = await bcrypt.compare(password, storedHash);
 
-    res.send({
-      name: user.name,
-      admin: user.admin,
-      accessToken,
-      refreshToken,
-    });
+    if (match) {
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      refreshTokens.push(refreshToken);
+
+      res.send({
+        name: user.name,
+        admin: user.admin,
+        accessToken,
+        refreshToken,
+      });
+    } else {
+      res.status(400).send("Username or password is incorrect!");
+    }
   } else {
     res.status(400).send("Username or password is incorrect!");
   }
