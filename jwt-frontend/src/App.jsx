@@ -80,10 +80,10 @@ function App() {
             <b>{user.name}</b>.
           </span>
           <span>Delete Users:</span>
-          <button className="deleteButton" onClick={() => handleDelete(1)}>
+          <button className="deleteButton" onClick={() => handleDelete(70879)}>
             Delete John
           </button>
-          <button className="deleteButton" onClick={() => handleDelete(12)}>
+          <button className="deleteButton" onClick={() => handleDelete(70880)}>
             Delete Yuji
           </button>
           {error && (
