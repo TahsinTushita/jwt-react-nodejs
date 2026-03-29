@@ -102,6 +102,7 @@ app.post("/api/login", async (req, res) => {
       res.send({
         name: user.name,
         admin: user.admin,
+        orders: user.orders,
         accessToken,
         refreshToken,
       });
