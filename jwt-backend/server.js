@@ -59,7 +59,7 @@ app.post("/api/refresh", (req, res) => {
     return res.status(403).send("Refresh token is not valid");
   }
 
-  jwt.verify(refreshToken, "refreshSecretKey", (err, user) => {
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
     err && console.log(err);
     refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
 
@@ -75,15 +75,23 @@ app.post("/api/refresh", (req, res) => {
 });
 
 const generateAccessToken = (user) => {
-  return jwt.sign({ id: user.id, admin: user.admin }, "secretKey", {
-    expiresIn: "15m",
-  });
+  return jwt.sign(
+    { id: user.id, admin: user.admin },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "15m",
+    },
+  );
 };
 
 const generateRefreshToken = (user) => {
-  return jwt.sign({ id: user.id, admin: user.admin }, "refreshSecretKey", {
-    expiresIn: "30d",
-  });
+  return jwt.sign(
+    { id: user.id, admin: user.admin },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: "30d",
+    },
+  );
 };
 
 // Login
@@ -121,7 +129,7 @@ const verify = (req, res, next) => {
   if (authHeader) {
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, "secretKey", (err, user) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
       if (err) {
         return res.status(403).send("Token is not valid!");
       }
