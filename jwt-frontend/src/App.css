@@ -4,8 +4,8 @@
 
 .login,
 .home {
-  width: 200px;
-  height: 200px;
+  width: 360px;
+  height: fit-content;
   padding: 20px;
   position: absolute;
   top: 0;
@@ -17,27 +17,60 @@
   border-radius: 10px;
 }
 
-form {
-  height: 100%;
+.App {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: space-around;
+  min-height: 100vh;
+  padding: 1rem 0.5rem;
+}
+
+section {
+  width: 100%;
+  max-width: 420px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  /* flex-grow: 1; */
+  padding-bottom: 1rem;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  font-size: 18px;
+  padding: 5px 10px;
+  border: 1px solid lightgray;
+  border-radius: 4px;
+  outline-color: teal;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.5rem;
+}
+
+label {
+  margin: 10px 0 5px 0;
+}
+
+li {
+  list-style-type: none;
 }
 
 .formTitle {
   color: teal;
   font-weight: bold;
-}
-
-input {
-  height: 30px;
-  border: none;
-  border-bottom: 1px solid lightgray;
-}
-
-input:focus {
-  outline: none;
+  margin-bottom: 10px;
 }
 
 .submitButton {
@@ -50,14 +83,8 @@ input:focus {
   cursor: pointer;
 }
 
-.home {
-  width: 300px;
-  height: 250px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-around;
-  text-align: center;
+.submitButton:disabled {
+  background-color: gray;
 }
 
 .deleteButton {
@@ -81,4 +108,61 @@ input:focus {
 .success {
   font-size: 12px;
   color: green;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.instructions {
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  background: #000;
+  color: #fff;
+  padding: 0.25rem;
+  position: relative;
+  bottom: -10px;
+}
+
+.instructions > svg {
+  margin-right: 0.25rem;
+}
+
+.offscreen {
+  position: absolute;
+  left: -9999px;
+}
+
+.hide {
+  display: none;
+}
+
+.valid {
+  color: limegreen;
+  margin-left: 0.25rem;
+}
+
+.invalid {
+  color: red;
+  margin-left: 0.25rem;
+}
+
+.errmsg {
+  background-color: lightpink;
+  color: firebrick;
+  font-weight: bold;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.link-to {
+  margin-top: 5px;
+}
+
+.home {
+  display: flex;
+  flex-direction: column;
 }
