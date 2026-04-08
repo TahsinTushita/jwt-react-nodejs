@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 import { getUser, getUsers, createUser, login } from "./database.js";
 
 const app = express();
@@ -18,6 +20,15 @@ app.use(function (req, res, next) {
   );
   next();
 });
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  }),
+);
+
+app.use(cookieParser());
 
 // Handle errors
 app.use((err, req, res, next) => {
@@ -52,7 +63,8 @@ let refreshTokens = [];
 
 // Generate a new access and refresh token
 app.post("/api/refresh", (req, res) => {
-  const refreshToken = req.body.token;
+  const refreshToken = req.cookies.refreshToken;
+  console.log(refreshToken);
 
   if (!refreshToken) return res.status(401).send("You are not authenticated");
   if (!refreshTokens.includes(refreshToken)) {
@@ -67,10 +79,15 @@ app.post("/api/refresh", (req, res) => {
     const newRefreshToken = generateRefreshToken(user);
 
     refreshTokens.push(newRefreshToken);
-    res.status(200).send({
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    });
+    res
+      .cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: false,
+      })
+      .status(200)
+      .send({
+        accessToken: newAccessToken,
+      });
   });
 });
 
@@ -107,13 +124,18 @@ app.post("/api/login", async (req, res) => {
       const refreshToken = generateRefreshToken(user);
       refreshTokens.push(refreshToken);
 
-      res.send({
-        name: user.name,
-        admin: user.admin,
-        orders: user.orders,
-        accessToken,
-        refreshToken,
-      });
+      res
+        .cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "strict",
+        })
+        .send({
+          name: user.name,
+          admin: user.admin,
+          orders: user.orders,
+          accessToken,
+        });
     } else {
       res.status(400).send("Username or password is incorrect!");
     }
@@ -121,6 +143,37 @@ app.post("/api/login", async (req, res) => {
     res.status(400).send("Username or password is incorrect!");
   }
 });
+
+function verifyRefreshToken(req, res) {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    res.send("You need to login");
+  } else {
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        res.send("you need to login");
+      } else {
+        refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+
+        const newAccessToken = generateAccessToken(user);
+        const newRefreshToken = generateRefreshToken(user);
+
+        refreshTokens.push(newRefreshToken);
+        res
+          .cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+          })
+          .status(200)
+          .send({
+            accessToken: newAccessToken,
+          });
+      }
+    });
+  }
+}
 
 // Verify the access token
 const verify = (req, res, next) => {
@@ -151,10 +204,17 @@ app.delete("/api/users/:id", verify, (req, res) => {
   }
 });
 
-app.post("/api/logout", verify, (req, res) => {
-  const refreshToken = req.body.token;
+// logout
+app.post("/api/logout", (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
   refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
-  res.status(200).send("You logged out successfully!");
+  res
+    .clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+    })
+    .status(200)
+    .send("You logged out successfully!");
 });
 
 app.listen(process.env.PORT, () => {

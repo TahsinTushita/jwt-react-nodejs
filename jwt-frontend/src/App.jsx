@@ -12,41 +12,50 @@ function App() {
 
   const refreshToken = async () => {
     try {
-      const res = await axios.post("/refresh", { token: user.refreshToken });
-      setUser({
-        ...user,
+      const res = await axios.post("/refresh", null);
+
+      setUser((prevUser) => ({
+        ...prevUser,
         accessToken: res.data.accessToken,
-        refreshToken: res.data.refreshToken,
-      });
+      }));
 
       return res.data;
     } catch (err) {
-      console.log(err);
+      console.error(err);
+      throw err;
     }
   };
 
-  const axiosJWT = axios.create();
+  const axiosJWT = axios.create({
+    withCredentials: true,
+  });
 
   axiosJWT.interceptors.request.use(
     async (config) => {
-      let currentDate = new Date();
-      const decodedToken = user && jwtDecode(user.accessToken);
+      if (!user) return config;
 
-      if (decodedToken.exp < currentDate.getTime()) {
+      const decodedToken = jwtDecode(user.accessToken);
+      const tokenExpired = decodedToken.exp * 1000 < Date.now();
+
+      if (tokenExpired) {
         const data = await refreshToken();
-        config.headers["authorization"] = "Bearer " + data.accessToken;
+        config.headers = {
+          ...config.headers,
+          authorization: `Bearer ${data.accessToken}`,
+        };
+      } else {
+        config.headers = {
+          ...config.headers,
+          authorization: `Bearer ${user.accessToken}`,
+        };
       }
 
       return config;
     },
-    (err) => {
-      return Promise.reject(err);
-    },
+    (err) => Promise.reject(err),
   );
 
-  console.log(user && jwtDecode(user.accessToken));
-
-  async function handleSubmit(e) {
+  async function handleLogin(e) {
     e.preventDefault();
 
     try {
@@ -62,12 +71,23 @@ function App() {
     setError(false);
 
     try {
-      await axiosJWT.delete("/users/" + id, {
-        headers: { authorization: "Bearer " + user.accessToken },
-      });
+      await axiosJWT.delete("/users/" + id);
       setSuccess(true);
     } catch (err) {
       setError(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    setSuccess(false);
+    setError(false);
+
+    try {
+      const res = await axiosJWT.post("/logout", null);
+      console.log(res.data);
+      setUser(null);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -96,11 +116,15 @@ function App() {
               User has been deleted successfully...
             </span>
           )}
+
+          <button className="submitButton" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       ) : (
         <div className="login">
-          <form onSubmit={handleSubmit}>
-            <span className="formTitle">Lama Login</span>
+          <form onSubmit={handleLogin}>
+            <span className="formTitle">Demo Login</span>
             <input
               type="text"
               placeholder="name"
