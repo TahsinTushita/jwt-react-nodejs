@@ -135,8 +135,6 @@ const SignUp = () => {
               <input
                 type="text"
                 id="name"
-                name="name"
-                placeholder="name"
                 ref={nameRef}
                 autoComplete="off"
                 onChange={(e) => setName(e.target.value)}
@@ -177,8 +175,6 @@ const SignUp = () => {
               <input
                 type="password"
                 id="password"
-                name="password"
-                placeholder="password"
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 aria-invalid={isPasswordValid ? false : true}
@@ -231,8 +227,6 @@ const SignUp = () => {
               <input
                 type="password"
                 id="confirm-password"
-                name="confirm-password"
-                placeholder="confirm-password"
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 aria-invalid={isConfirmPasswordValid ? false : true}

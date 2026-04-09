@@ -146,6 +146,8 @@ const generateRefreshToken = (user) => {
 app.post("/api/login", async (req, res) => {
   const { name, password } = req.body;
 
+  if (!name || !password) res.sendStatus(400);
+
   const user = await login(name);
 
   if (user) {
@@ -173,10 +175,10 @@ app.post("/api/login", async (req, res) => {
         accessToken,
       });
     } else {
-      res.status(400).send("Username or password is incorrect!");
+      res.sendStatus(401);
     }
   } else {
-    res.status(400).send("Username or password is incorrect!");
+    res.sendStatus(401);
   }
 });
 

@@ -1,20 +1,32 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
+import AuthContext from "./context/AuthProvider";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { Link } from "react-router-dom";
 import "./App.css";
 
+const LOGIN_URL = "/login";
+
 function Login() {
+  const { setAuth } = useContext(AuthContext);
+
   const nameRef = useRef();
+  const errRef = useRef();
+
   const [user, setUser] = useState(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [errMsg, setErrMsg] = useState("");
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     nameRef.current.focus();
   }, []);
+
+  useEffect(() => {
+    setErrMsg("");
+  }, [name, password]);
 
   const refreshToken = async () => {
     try {
@@ -65,10 +77,24 @@ function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("/login", { name, password });
+      const res = await axios.post(LOGIN_URL, { name, password });
       setUser(res.data);
+      setAuth(res.data);
+      setName("");
+      setPassword("");
+      // setSuccess(true);
     } catch (err) {
-      console.log(err);
+      if (!err?.response) {
+        setErrMsg("No server response!");
+      } else if (err.response?.status === 400) {
+        setErrMsg("Missing name or password!");
+      } else if (err.response?.status === 401) {
+        setErrMsg("Unauthorized!");
+      } else {
+        setErrMsg("Login failed!");
+      }
+
+      errRef.current.focus();
     }
   }
 
@@ -98,9 +124,9 @@ function Login() {
   };
 
   return (
-    <div className="container">
+    <>
       {user ? (
-        <div className="home">
+        <section className="home">
           <span>
             Welcome to the <b>{user.admin ? "admin" : "user"}</b> dashboard{" "}
             <b>{user.name}</b>.
@@ -130,34 +156,63 @@ function Login() {
           <button className="submitButton" onClick={handleLogout}>
             Logout
           </button>
-        </div>
+        </section>
       ) : (
-        <div className="login">
+        <section className="login">
+          <p
+            ref={errRef}
+            className={errMsg ? "errmsg" : "offscreen"}
+            aria-live="assertive"
+          >
+            {errMsg}
+          </p>
+
           <form onSubmit={handleLogin}>
             <span className="formTitle">Demo Login</span>
-            <input
-              type="text"
-              placeholder="name"
-              onChange={(e) => setName(e.target.value)}
-              style={{ marginBottom: "10px" }}
-              ref={nameRef}
-            />
-            <input
-              type="password"
-              placeholder="password"
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ marginBottom: "10px" }}
-            />
-            <button type="submit" className="submitButton">
+            <div className="form-row">
+              <label htmlFor="name">Name</label>
+
+              <input
+                type="text"
+                id="name"
+                onChange={(e) => setName(e.target.value)}
+                style={{ marginBottom: "10px" }}
+                ref={nameRef}
+                autoComplete="off"
+                value={name}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="password">Password</label>
+
+              <input
+                type="password"
+                id="password"
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ marginBottom: "10px" }}
+                required
+                value={password}
+              />
+            </div>
+            <button
+              type="submit"
+              className="submitButton"
+              disabled={!name || !password ? true : false}
+            >
               Login
             </button>
-            <p className="link-to">
-              <Link to="/signup">Create an Account</Link>
-            </p>
           </form>
-        </div>
+
+          <p className="link-to">
+            Need an account? <br />
+            <span>
+              <Link to="/signup">Create an Account</Link>
+            </span>
+          </p>
+        </section>
       )}
-    </div>
+    </>
   );
 }
 
