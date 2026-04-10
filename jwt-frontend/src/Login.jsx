@@ -1,14 +1,18 @@
-import { useState, useRef, useEffect, useContext } from "react";
-import AuthContext from "./context/AuthProvider";
+import { useState, useRef, useEffect } from "react";
+import useAuth from "./hooks/useAuth";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 
 const LOGIN_URL = "/login";
 
 function Login() {
-  const { setAuth } = useContext(AuthContext);
+  const { setAuth } = useAuth();
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
 
   const nameRef = useRef();
   const errRef = useRef();
@@ -82,6 +86,7 @@ function Login() {
       setAuth(res.data);
       setName("");
       setPassword("");
+      navigate(from, { replace: true });
       // setSuccess(true);
     } catch (err) {
       if (!err?.response) {
@@ -131,7 +136,7 @@ function Login() {
             Welcome to the <b>{user.admin ? "admin" : "user"}</b> dashboard{" "}
             <b>{user.name}</b>.
           </span>
-          <span
+          {/* <span
             style={{ fontSize: "18px", fontWeight: "bold", marginTop: "2px" }}
           >
             Delete Users:
@@ -151,7 +156,9 @@ function Login() {
             <span className="success">
               User has been deleted successfully...
             </span>
-          )}
+          )} */}
+          <Link to="/admin">Admin page</Link>
+          <Link to="/user">User page</Link>
 
           <button className="submitButton" onClick={handleLogout}>
             Logout

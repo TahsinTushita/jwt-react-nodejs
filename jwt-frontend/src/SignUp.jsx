@@ -267,6 +267,9 @@ const SignUp = () => {
               <Link to="/">Log in</Link>
             </span>
           </p>
+
+          <a href="/admin">Admin page</a>
+          <a href="/user">User page</a>
         </section>
       )}
     </>
